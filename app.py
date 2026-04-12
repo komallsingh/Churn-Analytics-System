@@ -9,22 +9,14 @@ columns = pickle.load(open("model/columns.pkl", "rb"))
 st.title("Customer Churn Prediction App")
 
 st.write("Enter customer details:")
-
-# =========================
 # USER INPUTS
-# =========================
-
 tenure = st.slider("Tenure (months)", 0, 72)
 monthly_charges = st.number_input("Monthly Charges", 0.0, 200.0)
 
 gender = st.selectbox("Gender", ["Male", "Female"])
 contract = st.selectbox("Contract", ["Month-to-month", "One year", "Two year"])
 paperless = st.selectbox("Paperless Billing", ["Yes", "No"])
-
-# =========================
 # PREDICT BUTTON
-# =========================
-
 if st.button("Predict"):
 
     # Create empty dataframe with all columns
@@ -46,14 +38,10 @@ if st.button("Predict"):
 
     if contract == "Two year" and "Contract_Two year" in input_data.columns:
         input_data["Contract_Two year"] = 1
-
-    # =========================
     # PREDICTION
-    # =========================
-
     prediction = model.predict(input_data)[0]
 
     if prediction == 1:
-        st.error("Customer will churn ❌")
+        st.error("Customer will churn ")
     else:
-        st.success("Customer will stay ✅")
+        st.success("Customer will stay ")
