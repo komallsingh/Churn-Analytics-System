@@ -17,12 +17,12 @@ MODEL_PATH = os.path.join(BASE_DIR, "model", "model.pkl")
 COLUMNS_PATH = os.path.join(BASE_DIR, "model", "columns.pkl")
 SCALER_PATH = os.path.join(BASE_DIR, "model", "scaler.pkl")
 
-EDA_CHURN = os.path.join(BASE_DIR, "eda", "eda_churn_count.png")
-EDA_CONTRACT = os.path.join(BASE_DIR, "eda", "eda_contract.png")
-EDA_TENURE = os.path.join(BASE_DIR, "eda", "eda_tenure.png")
-EDA_MONTHLY = os.path.join(BASE_DIR, "eda", "eda_monthly_charges.png")
-EDA_CORR = os.path.join(BASE_DIR, "eda", "eda_correlation.png")
-EDA_SUPPORT = os.path.join(BASE_DIR, "eda", "eda_tech_support.png")
+EDA_CHURN = os.path.join(BASE_DIR, "EDA", "eda_churn_count.png")
+EDA_CONTRACT = os.path.join(BASE_DIR, "EDA", "eda_contract.png")
+EDA_TENURE = os.path.join(BASE_DIR, "EDA", "eda_tenure.png")
+EDA_MONTHLY = os.path.join(BASE_DIR, "EDA", "eda_monthly_charges.png")
+EDA_CORR = os.path.join(BASE_DIR, "EDA", "eda_correlation.png")
+EDA_SUPPORT = os.path.join(BASE_DIR, "EDA", "eda_tech_support.png")
 
 @st.cache_data
 def load_data():
