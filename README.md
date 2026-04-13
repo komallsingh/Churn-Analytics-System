@@ -118,4 +118,4 @@ churn-app/
 [![GitHub](https://img.shields.io/badge/GitHub-komallsingh-181717?style=flat&logo=github&logoColor=white)](https://github.com/komallsingh)
 
 **Kratika Gupta**
-[![GitHub](https://img.shields.io/badge/GitHub-thearealkratika-181717?style=flat&logo=github&logoColor=white)](https://github.com/thearealkratika)
+[![GitHub](https://img.shields.io/badge/GitHub-thearealkratika-181717?style=flat&logo=github&logoColor=white)](https://github.com/therealkratika)
