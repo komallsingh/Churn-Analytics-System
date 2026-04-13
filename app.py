@@ -3,9 +3,6 @@ import pandas as pd
 import numpy as np
 import pickle
 
-# ==========================
-# CONFIG
-# ==========================
 st.set_page_config(page_title="Churn Dashboard", layout="wide")
 
 st.title("📡 Customer Churn Prediction Dashboard")
@@ -147,9 +144,8 @@ with tab1:
  Action: Maintain loyalty
 """)
 
-# ==========================
+
 # PREDICTION TAB
-# ==========================
 with tab2:
 
     st.header("🎯 Predict Customer Churn")
