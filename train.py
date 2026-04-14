@@ -1,103 +1,98 @@
 import os
 import pickle
 import numpy as np
-
+import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
-from preprocess import preprocess
+
+def load_and_prepare(data_path):
+    df = pd.read_csv(data_path)
+
+    # clean
+    df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+    df = df.dropna(subset=["TotalCharges"])
+
+    # target
+    df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
+
+    # keep only the columns our UI uses
+    keep = ["tenure", "MonthlyCharges", "TotalCharges",
+            "gender", "Contract", "InternetService", "Churn"]
+    df = df[keep].copy()
+
+    # binary encode gender
+    df["gender"] = df["gender"].map({"Female": 1, "Male": 0})
+
+    # one-hot encode Contract & InternetService (drop_first=True matches app.py)
+    df = pd.get_dummies(df, columns=["Contract", "InternetService"], drop_first=True)
+
+    return df
 
 
 def train_model(data_path):
-    
-    df, scaler = preprocess(data_path)
+    df = load_and_prepare(data_path)
 
-    # FEATURE SELECTION
     X = df.drop("Churn", axis=1)
     y = df["Churn"]
 
-    print("\nSelected Features: ", X.columns.tolist())
+    print("Features used:", X.columns.tolist())
 
-  
-    # DATA SPLIT
-    
+    # scale numerics
+    scaler = StandardScaler()
+    num_cols = ["tenure", "MonthlyCharges", "TotalCharges"]
+    X[num_cols] = scaler.fit_transform(X[num_cols])
+
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
-        test_size=0.2,
-        random_state=42,
-        stratify=y  
+        X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # MODEL SELECTION
-  
     models = {
         "RandomForest": RandomForestClassifier(
-            n_estimators=200,
-            max_depth=12,
-            class_weight="balanced",
-            random_state=42
+            n_estimators=200, max_depth=12,
+            class_weight="balanced", random_state=42
         ),
         "LogisticRegression": LogisticRegression(
-            max_iter=1000,
-            class_weight="balanced"
-        )
+            max_iter=1000, class_weight="balanced"
+        ),
     }
 
-    best_model = None
-    best_score = 0
-    
-    print("\nK-Fold Cross Validation (Optimized for Recall):")
-
+    best_model, best_score = None, 0
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
-    for name, model in models.items():
-        scores = cross_val_score(model, X_train, y_train, cv=skf, scoring='recall')
-        avg_score = scores.mean()
+    print("\nK-Fold Cross Validation (scoring: recall):")
+    for name, m in models.items():
+        scores = cross_val_score(m, X_train, y_train, cv=skf, scoring="recall")
+        print(f"  {name}: {scores.mean():.4f}")
+        if scores.mean() > best_score:
+            best_score = scores.mean()
+            best_model = m
 
-        print(f"{name} Recall: {avg_score:.4f}")
-
-        if avg_score > best_score:
-            best_score = avg_score
-            best_model = model
-
-    print(f"\nBest Model Selected: {best_model}")
-
-    
+    print(f"\nBest model: {best_model.__class__.__name__}")
     best_model.fit(X_train, y_train)
 
-   
+    print("\n=== Default threshold (0.5) ===")
     y_pred = best_model.predict(X_test)
-
-    print("\n=== Default Threshold (0.5) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred))
-    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+    print(confusion_matrix(y_test, y_pred))
 
-    print("\n=== After Threshold Tuning (0.35) ===")
-
+    print("\n=== Tuned threshold (0.35) ===")
     y_prob = best_model.predict_proba(X_test)[:, 1]
+    y_pred2 = (y_prob >= 0.35).astype(int)
+    print("Accuracy:", accuracy_score(y_test, y_pred2))
+    print(classification_report(y_test, y_pred2))
+    print(confusion_matrix(y_test, y_pred2))
 
-    threshold = 0.35
-    y_pred_new = (y_prob >= threshold).astype(int)
-
-    print("Accuracy:", accuracy_score(y_test, y_pred_new))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_new))
-    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_new))
-
+    # save
     os.makedirs("model", exist_ok=True)
-
-    with open("model/model.pkl", "wb") as f:
-        pickle.dump(best_model, f)
-
-    with open("model/columns.pkl", "wb") as f:
-        pickle.dump(X.columns.tolist(), f)
-
-    with open("model/scaler.pkl", "wb") as f:
-        pickle.dump(scaler, f)
-
-    print("\nModel, columns, and scaler saved!")
+    pickle.dump(best_model,          open("model/model.pkl",   "wb"))
+    pickle.dump(X.columns.tolist(),  open("model/columns.pkl", "wb"))
+    pickle.dump(scaler,              open("model/scaler.pkl",  "wb"))
+    print("\nSaved: model.pkl, columns.pkl, scaler.pkl")
 
 
 if __name__ == "__main__":
